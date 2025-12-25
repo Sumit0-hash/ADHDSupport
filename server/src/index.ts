@@ -3,7 +3,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDB } from './config/database.js'; // Import the database connection function
+import { connectDB } from './config/database.js'; 
 
 // Import all route handlers
 import userRoutes from './routes/users.js';

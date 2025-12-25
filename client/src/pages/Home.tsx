@@ -122,7 +122,7 @@ export function Home() {
           <SignedIn>
             <Link
               to="/dashboard"
-              className="inline-block px-8 py-3 bg-[#469CA4] text-white rounded-md hover:bg-[#3a7d84] transition font-semibold"
+              className="inline-block px-8 py-3 bg-[#469CA4] text-white rounded-md hover:bg-[#3a7d84] hover:text-white transition font-semibold"
             >
               Go to Your Dashboard
             </Link>

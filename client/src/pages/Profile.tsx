@@ -5,7 +5,7 @@ import { useData } from '../context/UserContext.js';
 import { useUserProfile } from '../context/UserProfileContext.js';
 // Import the Clerk hook only for basic authentication status and image URL
 import { useUser } from '@clerk/clerk-react'; 
-import { Mail, User, BookOpen, Calendar, Heart, Lock, Settings, X } from 'lucide-react';
+import { Mail, User, BookOpen, Calendar, X } from 'lucide-react';
 import type { IPlannerEntry, IEmotionalCheckin, IUser } from '../types/index.js';
 
 // --- Reusable Modal Component ---
@@ -30,7 +30,7 @@ export const Profile = () => {
     const { userProfile, isProfileLoading, updateProfile } = useUserProfile();
 
     // GLOBAL DATA: For linking IDs to course/event/resource details
-    const { courses, events, resources, loading: isDataLoading } = useData();
+    const { courses, events, loading: isDataLoading } = useData();
 
     // --- Local State for Editing ---
     const [isEditing, setIsEditing] = useState(false);
@@ -90,12 +90,10 @@ export const Profile = () => {
     // Map object IDs to strings for comparison
     const enrolledCoursesIds = profile.enrolledCourses?.map(id => id.toString()) || [];
     const registeredEventsIds = profile.registeredEvents?.map(id => id.toString()) || [];
-    const favoriteResourcesIds = profile.favoriteResources?.map(id => id.toString()) || [];
 
     // Combine Data Sources
     const enrolledCourseDetails = courses.filter(c => enrolledCoursesIds.includes(c._id!));
     const registeredEventDetails = events.filter(e => registeredEventsIds.includes(e._id!));
-    const favoriteResourceDetails = resources.filter(r => favoriteResourcesIds.includes(r._id!));
 
 
     return (
@@ -194,31 +192,6 @@ export const Profile = () => {
                         </div>
 
                         <div className="border-t border-[#EFE3DF] pt-8 space-y-8">
-                            
-                            {/* Account Settings Link */}
-                            <h2 className="text-xl font-bold text-[#30506C] mb-4">Account Settings</h2>
-                            <div className="space-y-3">
-                                <a 
-                                    href={profile.clerkId ? `/user/${profile.clerkId}/settings` : '#'} 
-                                    className="flex items-center justify-between p-3 bg-[#F5F0ED] rounded-lg hover:bg-[#D7E9ED] transition"
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        <Settings size={20} className="text-[#469CA4]" />
-                                        <span className="font-medium text-[#30506C]">Edit Profile Settings</span>
-                                    </div>
-                                    <Lock size={16} className="text-[#263A47]" />
-                                </a>
-                                <a 
-                                    href={profile.clerkId ? `/user/${profile.clerkId}/security` : '#'} 
-                                    className="flex items-center justify-between p-3 bg-[#F5F0ED] rounded-lg hover:bg-[#D7E9ED] transition"
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        <Lock size={20} className="text-[#469CA4]" />
-                                        <span className="font-medium text-[#30506C]">Security and Authentication</span>
-                                    </div>
-                                    <Lock size={16} className="text-[#263A47]" />
-                                </a>
-                            </div>
 
 
                             <div>
@@ -265,32 +238,7 @@ export const Profile = () => {
                                 )}
                             </div>
 
-                            <div>
-                                <h2 className="text-xl font-bold text-[#30506C] mb-4 flex items-center space-x-2">
-                                    <Heart size={24} />
-                                    <span>Favorite Resources</span>
-                                </h2>
-                                {favoriteResourceDetails.length === 0 ? (
-                                    <p className="text-[#263A47]">No favorite resources yet. Explore resources!</p>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {favoriteResourceDetails.map(resource => (
-                                            <div key={resource._id} className="p-4 bg-[#F5F0ED] rounded-lg">
-                                                <h3 className="font-semibold text-[#30506C]">{resource.resourceTitle}</h3>
-                                                <p className="text-sm text-[#263A47]">{resource.resourceDescription}</p>
-                                                <a
-                                                    href={resource.resourceLink}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-[#469CA4] hover:text-[#3a7f8a] text-xs font-medium mt-2 inline-block"
-                                                >
-                                                    Open Resource →
-                                                </a>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            
                         </div>
                     </div>
                 </div>

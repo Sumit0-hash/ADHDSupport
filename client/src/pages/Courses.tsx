@@ -1,40 +1,71 @@
 import React, { useState, useEffect } from 'react';
-// REMOVED: import { useUser } from '@clerk/clerk-react'; // No longer needed for profile data
-import { useUser } from '@clerk/clerk-react'; // Keep for user.id and loading check
+import { useUser, SignInButton } from '@clerk/clerk-react'; // Added SignInButton
 import { useData } from '../context/UserContext.js';
-import { useUserProfile } from '../context/UserProfileContext.js'; // 1. IMPORT UserProfile Hook
-import { api } from '../services/api.js'; // 2. IMPORT API Client
-import { BookOpen, Calendar, User, CheckCircle } from 'lucide-react';
+import { useUserProfile } from '../context/UserProfileContext.js';
+import { api } from '../services/api.js';
+import { BookOpen, Calendar, User, CheckCircle, Lock } from 'lucide-react'; // Added Lock icon
 import type { ICourse } from '../types/index.js';
 
 export const Courses = () => {
     // --- HOOKS ---
-    const { isLoaded: isClerkLoaded } = useUser(); // Keep for basic auth loading check
-    const { courses, loading: isDataLoading } = useData(); // Global course catalog
-    const { userProfile, isProfileLoading, refreshProfile } = useUserProfile(); // User profile and refresh
+    // Destructure isSignedIn to check auth status
+    const { isLoaded: isClerkLoaded, isSignedIn } = useUser(); 
+    const { courses, loading: isDataLoading } = useData();
+    const { userProfile, isProfileLoading, refreshProfile } = useUserProfile();
 
     const [filter, setFilter] = useState<'all' | 'enrolled' | 'available'>('all');
     const [selectedCourse, setSelectedCourse] = useState<ICourse | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // 3. REMOVED: The useEffect hook that set mockCourses is deleted.
-    // Courses are now loaded via DataProvider (useData).
+    // --- 1. CLERK LOADING STATE ---
+    // Wait until Clerk determines if the user is logged in or not
+    if (!isClerkLoaded) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <p className="text-[#30506C]">Checking authentication...</p>
+            </div>
+        );
+    }
 
-    // Safely get enrolled courses from the live userProfile, defaulting to empty array.
-    const enrolledCourses: string[] = userProfile 
-        ? (userProfile.enrolledCourses?.map(id => id.toString()) || [])
-        : [];
+    // --- 2. NOT SIGNED IN STATE ---
+    // Clerk is loaded, but user is not signed in. Show warning.
+    if (!isSignedIn) {
+        return (
+            <div className="flex flex-col justify-center items-center min-h-screen bg-[#D7E9ED] px-4">
+                <div className="bg-white p-8 rounded-lg shadow-md text-center max-w-md w-full">
+                    <div className="bg-[#EAF4F6] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Lock className="text-[#30506C]" size={32} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#30506C] mb-2">Access Restricted</h2>
+                    <p className="text-[#263A47] mb-6">
+                        Please sign in to view the course catalog and manage your enrollments.
+                    </p>
+                    <SignInButton mode="modal">
+                        <button className="bg-[#469CA4] hover:bg-[#3a7f8a] text-white px-6 py-2 rounded-lg font-medium transition w-full">
+                            Sign In
+                        </button>
+                    </SignInButton>
+                </div>
+            </div>
+        );
+    }
 
-    // --- LOADING CHECK ---
-    if (!isClerkLoaded || isDataLoading || isProfileLoading || !userProfile) {
+    // --- 3. DATA LOADING STATE ---
+    // User IS signed in, but profile or courses are still fetching
+    if (isDataLoading || isProfileLoading || !userProfile) {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <p className="text-[#30506C]">Loading courses and user data...</p>
             </div>
         );
     }
+
+    // Safely get enrolled courses
+    const enrolledCourses: string[] = userProfile 
+        ? (userProfile.enrolledCourses?.map(id => id.toString()) || [])
+        : [];
     
-    const clerkId = userProfile.clerkId; // Get ID here once
+    const clerkId = userProfile.clerkId;
 
     const filteredCourses = courses.filter(course => {
         const courseId = course._id!;
@@ -49,24 +80,17 @@ export const Courses = () => {
         return true;
     });
 
-    // 4. IMPLEMENT LIVE ENROLLMENT HANDLER
     const handleEnroll = async (courseId: string) => {
         if (!clerkId || !courseId || enrolledCourses.includes(courseId)) return;
         
         setIsSubmitting(true);
         
         try {
-            // API call to the backend endpoint we set up: POST /api/users/:clerkId/enrollCourse
             await api.users.enrollCourse(clerkId, courseId);
-            
-            // Success: Refresh the UserProfile context to update the UI immediately
             await refreshProfile();
-            
             console.log(`Successfully enrolled in course: ${courseId}`);
-
         } catch (error) {
             console.error('Failed to enroll in course:', error);
-            // Optional: Show an error notification
         } finally {
             setIsSubmitting(false);
         }

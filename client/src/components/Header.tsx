@@ -18,6 +18,7 @@ export const Header = () => {
   // Use Clerk's useUser hook to access current user data if needed
   const { user } = useUser();
   const userEmail = user?.primaryEmailAddress?.emailAddress || '';
+  const userName = user?.fullName || '';
 
   const { userProfile, isProfileLoading } = useUserProfile(); 
   const isAdmin = userProfile?.userType === 'admin';
@@ -89,9 +90,9 @@ export const Header = () => {
 
             <SignedIn>
               {/* Show User Email ID and Profile Button */}
-              {userEmail && (
+              {userName && (
                 <div className="flex items-center space-x-2 text-sm text-gray-300 bg-[#263A47] py-1 px-3 rounded-full">
-                  <span className="max-w-[150px] truncate">{userEmail}</span>
+                  <span className="max-w-[150px] truncate">{userName}</span>
                 </div>
               )}
               {/* This component includes the logout functionality */}
