@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
   SignedIn, 
-  SignedOut, 
+  SignedOut,
+  SignInButton // Added this import
 } from '@clerk/clerk-react'; 
 
 export function Home() {
@@ -26,12 +27,13 @@ export function Home() {
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               
               <SignedOut>
-                <Link
-                  to="/sign-in" 
-                  className="px-8 py-3 bg-[#469CA4] text-white rounded-md hover:bg-[#3a7d84] hover:text-white transition font-semibold"
-                >
-                  Get Started
-                </Link>
+                {/* CHANGED: Replaced Link with SignInButton modal */}
+                <SignInButton mode="modal">
+                  <button className="px-8 py-3 bg-[#469CA4] text-white rounded-md hover:bg-[#3a7d84] hover:text-white transition font-semibold">
+                    Get Started
+                  </button>
+                </SignInButton>
+
                 <Link
                   to="/courses"
                   className="px-8 py-3 bg-white text-[#30506C] rounded-md hover:bg-gray-100 transition font-semibold"
@@ -89,7 +91,7 @@ export function Home() {
             </Link>
 
             <Link 
-              to="/courses"
+              to="/"
               className="group bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center text-center h-48 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-transparent hover:border-[#469CA4]"
             >
               <div className="mb-4 text-[#469CA4] group-hover:scale-110 transition-transform">
@@ -111,12 +113,12 @@ export function Home() {
           </p>
           
           <SignedOut>
-            <Link
-              to="/sign-in"
-              className="inline-block px-8 py-3 bg-[#469CA4] text-white rounded-md hover:bg-[#3a7d84] transition font-semibold"
-            >
-              Create Your Free Account
-            </Link>
+            {/* CHANGED: Replaced Link with SignInButton modal */}
+            <SignInButton mode="modal">
+              <button className="inline-block px-8 py-3 bg-[#469CA4] text-white rounded-md hover:bg-[#3a7d84] transition font-semibold">
+                Create Your Free Account
+              </button>
+            </SignInButton>
           </SignedOut>
           
           <SignedIn>
