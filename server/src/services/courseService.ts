@@ -1,5 +1,3 @@
-// server/src/services/courseService.ts
-
 import { ICourse } from '../models/types.js';
 import { Course } from '../models/Course.js'; // Import the Mongoose Model
 
@@ -9,7 +7,6 @@ export const courseService = {
    * @returns An array of all course objects.
    */
   async getAllCourses(): Promise<ICourse[]> {
-    // Use find({}) to retrieve all documents
     return await Course.find({}).lean<ICourse[]>();
   },
 
@@ -19,8 +16,23 @@ export const courseService = {
    * @returns The course object or null if not found.
    */
   async getCourseById(courseId: string): Promise<ICourse | null> {
-    // Use findById for quick retrieval by the primary key (_id)
     return await Course.findById(courseId).lean<ICourse | null>();
+  },
+
+  /**
+   * Retrieves only the payment link for a course.
+   * @param courseId The ID of the course.
+   * @returns Object with paymentLink or null if course not found.
+   */
+  async getCoursePaymentLink(courseId: string): Promise<{ paymentLink?: string } | null> {
+    return await Course.findById(courseId)
+      .select('paymentLink')
+      .lean<{ paymentLink?: string } | null>();
+  },
+  async getCourseLink(courseId: string): Promise<{ courseLink?: string } | null> {
+    return await Course.findById(courseId)
+      .select('courseLink')
+      .lean<{ courseLink?: string } | null>();
   },
 
   /**
@@ -28,22 +40,28 @@ export const courseService = {
    * @returns The newly created course object.
    */
   async createCourse(
-    courseTitle: string,
-    courseDescription: string,
-    courseInstructor: string,
-    courseStartDate: Date,
-    courseEndDate: Date
-  ): Promise<ICourse> {
-    // Use Mongoose create to save the new course
-    const newCourse = await Course.create({
-      courseTitle,
-      courseDescription,
-      courseInstructor,
-      courseStartDate,
-      courseEndDate,
-    });
-    return newCourse.toObject() as ICourse;
-  },
+  courseTitle: string,
+  courseDescription: string,
+  courseInstructor: string,
+  courseStartDate: Date,
+  courseEndDate: Date,
+  paymentLink?: string,
+  courseLink?: string
+): Promise<ICourse> {
+  const newCourse = await Course.create({
+    courseTitle,
+    courseDescription,
+    courseInstructor,
+    courseStartDate,
+    courseEndDate,
+    paymentLink,
+    courseLink,
+  });
+
+  return newCourse.toObject() as ICourse;
+},
+
+
 
   /**
    * Updates an existing course.
@@ -52,13 +70,12 @@ export const courseService = {
    * @returns The updated course object or null if not found.
    */
   async updateCourse(courseId: string, updates: Partial<ICourse>): Promise<ICourse | null> {
-    // Use findByIdAndUpdate to atomically update the course
     return await Course.findByIdAndUpdate(
       courseId,
-      { 
-        $set: { ...updates, updatedAt: new Date() } 
+      {
+        $set: { ...updates, updatedAt: new Date() },
       },
-      { new: true } // Return the modified document
+      { new: true }
     ).lean<ICourse | null>();
   },
 
@@ -69,7 +86,6 @@ export const courseService = {
    */
   async deleteCourse(courseId: string): Promise<boolean> {
     const result = await Course.deleteOne({ _id: courseId });
-    // Returns true if one document was successfully deleted
     return result.deletedCount === 1;
   },
 };

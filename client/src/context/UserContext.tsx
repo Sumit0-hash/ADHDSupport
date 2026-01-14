@@ -4,25 +4,27 @@ import { api } from '../services/api.js'; // 1. Import API Client
 
 // Interface now only tracks application data and loading state
 interface DataContextType {
-  courses: ICourse[];
-  setCourses: (courses: ICourse[]) => void;
-  events: IEvent[];
-  setEvents: (events: IEvent[]) => void;
-  resources: IResource[];
-  setResources: (resources: IResource[]) => void;
-  loading: boolean;
-  setLoading: (loading: boolean) => void;
-}
+  courses: ICourse[];
+  setCourses: React.Dispatch<React.SetStateAction<ICourse[]>>;
 
+  events: IEvent[];
+  setEvents: React.Dispatch<React.SetStateAction<IEvent[]>>;
+
+  resources: IResource[];
+  setResources: React.Dispatch<React.SetStateAction<IResource[]>>;
+
+  loading: boolean;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+}
 // Renamed context internally to DataContext
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Renamed provider internally to DataProvider
 export const DataProvider = ({ children }: { children: ReactNode }) => {
-  const [courses, setCourses] = useState<ICourse[]>([]);
-  const [events, setEvents] = useState<IEvent[]>([]);
-  const [resources, setResources] = useState<IResource[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState<ICourse[]>([]);
+  const [events, setEvents] = useState<IEvent[]>([]);
+  const [resources, setResources] = useState<IResource[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // 2. Use useEffect to fetch data on component mount
   useEffect(() => {
@@ -52,29 +54,29 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     fetchGlobalData();
   }, []); // Empty dependency array ensures this runs once on mount
 
-  return (
-    <DataContext.Provider
-      value={{
-        courses,
-        setCourses,
-        events,
-        setEvents,
-        resources,
-        setResources,
-        loading,
-        setLoading,
-      }}
-    >
-      {children}
-    </DataContext.Provider>
-  );
+  return (
+    <DataContext.Provider
+      value={{
+        courses,
+        setCourses,
+        events,
+        setEvents,
+        resources,
+        setResources,
+        loading,
+        setLoading,
+      }}
+    >
+      {children}
+    </DataContext.Provider>
+  );
 };
 
 // Renamed hook to useData
 export const useData = () => {
-  const context = useContext(DataContext);
-  if (context === undefined) {
-    throw new Error('useData must be used within DataProvider');
-  }
-  return context;
+  const context = useContext(DataContext);
+  if (context === undefined) {
+    throw new Error('useData must be used within DataProvider');
+  }
+  return context;
 };

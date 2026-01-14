@@ -28,12 +28,54 @@ router.get('/:courseId', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/courses/:courseId/payment-link - Get payment link only
+router.get('/:courseId/payment-link', async (req: Request, res: Response) => {
+  try {
+    const data = await courseService.getCoursePaymentLink(req.params.courseId);
+
+    if (!data) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    if (!data.paymentLink) {
+      return res.status(404).json({ error: 'Payment link not available for this course' });
+    }
+
+    res.json({ paymentLink: data.paymentLink });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+router.get('/:courseId/course-link', async (req: Request, res: Response) => {
+  try {
+    const data = await courseService.getCourseLink(req.params.courseId);
+
+    if (!data) return res.status(404).json({ error: 'Course not found' });
+    if (!data.courseLink) return res.status(404).json({ error: 'Course link not available for this course' });
+
+    res.json({ courseLink: data.courseLink });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+
 // POST /api/courses - Create a new course (Admin function)
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { courseTitle, courseDescription, courseInstructor, courseStartDate, courseEndDate } = req.body;
+    const {
+      courseTitle,
+      courseDescription,
+      courseInstructor,
+      courseStartDate,
+      courseEndDate,
+      paymentLink,
+      courseLink,
+    } = req.body;
 
-    if (!courseTitle || !courseInstructor || !courseStartDate) {
+
+    if (!courseTitle || !courseInstructor || !courseStartDate || !courseEndDate) {
       return res.status(400).json({ error: 'Missing required course fields' });
     }
 
@@ -42,13 +84,17 @@ router.post('/', async (req: Request, res: Response) => {
       courseDescription,
       courseInstructor,
       new Date(courseStartDate),
-      new Date(courseEndDate)
+      new Date(courseEndDate),
+      paymentLink,
+      courseLink
     );
+
     res.status(201).json(newCourse);
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }
 });
+
 
 // PUT /api/courses/:courseId - Update an existing course (Admin function)
 router.put('/:courseId', async (req: Request, res: Response) => {
@@ -71,7 +117,7 @@ router.delete('/:courseId', async (req: Request, res: Response) => {
     if (!success) {
       return res.status(404).json({ error: 'Course not found or could not be deleted' });
     }
-    res.status(204).send(); // 204 No Content for successful deletion
+    res.status(204).send();
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });
   }

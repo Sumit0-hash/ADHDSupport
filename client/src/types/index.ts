@@ -63,9 +63,13 @@ export interface ICourse {
   courseInstructor: string;
   courseStartDate: Date;
   courseEndDate: Date;
+  paymentLink?: string;
+  courseLink?: string;
   createdAt: Date;
   updatedAt: Date;
 }
+
+
 
 export interface IResource {
   _id?: string;
@@ -84,6 +88,8 @@ export interface IEvent {
   eventLocation: string;
   eventDescription: string;
   attendees: string[];
+  paymentLink?: string;
+  eventLink?: string;
   createdAt: Date;
   updatedAt: Date;
 }

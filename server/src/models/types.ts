@@ -79,9 +79,12 @@ export interface ICourse {
   courseInstructor: string;
   courseStartDate: Date;
   courseEndDate: Date;
+  paymentLink?: string; // optional
+  courseLink?: string;  // optional
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 export interface IResource {
   _id?: string;
@@ -100,9 +103,12 @@ export interface IEvent {
   eventLocation: string;
   eventDescription: string;
   attendees: (string | Types.ObjectId)[];
+  paymentLink?: string;
+  eventLink?: string;
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 export interface IAdmin {
   _id?: string;
