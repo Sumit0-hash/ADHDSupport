@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ICourse, IEvent, IResource } from '../types/index.js';
-import { api } from '../services/api.js'; // 1. Import API Client
+import { ICourse, IEvent, IResource, IExpertTalk } from '../types/index.js';
+import { api } from '../services/api.js';
 
-// Interface now only tracks application data and loading state
 interface DataContextType {
   courses: ICourse[];
   setCourses: React.Dispatch<React.SetStateAction<ICourse[]>>;
@@ -13,46 +12,46 @@ interface DataContextType {
   resources: IResource[];
   setResources: React.Dispatch<React.SetStateAction<IResource[]>>;
 
+  expertTalks: IExpertTalk[];
+  setExpertTalks: React.Dispatch<React.SetStateAction<IExpertTalk[]>>;
+
   loading: boolean;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
-// Renamed context internally to DataContext
+
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Renamed provider internally to DataProvider
 export const DataProvider = ({ children }: { children: ReactNode }) => {
   const [courses, setCourses] = useState<ICourse[]>([]);
   const [events, setEvents] = useState<IEvent[]>([]);
   const [resources, setResources] = useState<IResource[]>([]);
+  const [expertTalks, setExpertTalks] = useState<IExpertTalk[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // 2. Use useEffect to fetch data on component mount
   useEffect(() => {
     const fetchGlobalData = async () => {
-      setLoading(true); // Start loading state
+      setLoading(true);
       try {
-        // Fetch Courses
-        const courseResponse = await api.courses.getAll();
+        const [courseResponse, eventResponse, resourceResponse, talkResponse] = await Promise.all([
+          api.courses.getAll(),
+          api.events.getUpcoming(),
+          api.resources.getAll(),
+          api.expertTalks.getAll(),
+        ]);
+
         setCourses(courseResponse.data);
-
-        // Fetch Upcoming Events
-        const eventResponse = await api.events.getUpcoming(); // Fetching upcoming events is usually better for dashboard
         setEvents(eventResponse.data);
-
-        // Fetch Resources
-        const resourceResponse = await api.resources.getAll();
         setResources(resourceResponse.data);
-
+        setExpertTalks(talkResponse.data);
       } catch (error) {
-        console.error("Failed to fetch initial application data:", error);
-        // Optionally, show an error notification to the user
+        console.error('Failed to fetch initial application data:', error);
       } finally {
-        setLoading(false); // Stop loading state
+        setLoading(false);
       }
     };
 
     fetchGlobalData();
-  }, []); // Empty dependency array ensures this runs once on mount
+  }, []);
 
   return (
     <DataContext.Provider
@@ -63,6 +62,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         setEvents,
         resources,
         setResources,
+        expertTalks,
+        setExpertTalks,
         loading,
         setLoading,
       }}
@@ -72,7 +73,6 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Renamed hook to useData
 export const useData = () => {
   const context = useContext(DataContext);
   if (context === undefined) {

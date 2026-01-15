@@ -3,8 +3,8 @@ import { useUser } from '@clerk/clerk-react';
 import { useData } from '../context/UserContext.js';
 import { useUserProfile } from '../context/UserProfileContext.js';
 import { api } from '../services/api.js';
-import { BookOpen, Calendar, Users, Settings, Plus, X, Trash2, AlertTriangle } from 'lucide-react';
-import type { ICourse, IEvent, IResource } from '../types/index.js';
+import { BookOpen, Calendar, Users, Settings, Plus, X, Trash2, AlertTriangle, Video } from 'lucide-react';
+import type { ICourse, IEvent, IResource, IExpertTalk } from '../types/index.js';
 
 // --- Reusable Modal Component ---
 const Modal: React.FC<{ title: string; children: React.ReactNode; onClose: () => void }> = ({
@@ -28,45 +28,67 @@ const Modal: React.FC<{ title: string; children: React.ReactNode; onClose: () =>
 export const Admin = () => {
   // --- HOOKS ---
   const { user, isLoaded: isUserLoaded } = useUser();
-  const { courses, events, resources, loading: isDataLoading, setCourses, setEvents, setResources } = useData();
+  const {
+    courses,
+    events,
+    resources,
+    expertTalks,
+    loading: isDataLoading,
+    setCourses,
+    setEvents,
+    setResources,
+    setExpertTalks,
+  } = useData();
+
   const { userProfile, isProfileLoading } = useUserProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Modal State for Adds
-  const [modalType, setModalType] = useState<'course' | 'event' | 'resource' | null>(null);
+  const [modalType, setModalType] = useState<'course' | 'event' | 'resource' | 'expertTalk' | null>(null);
 
   // --- DELETE STATE ---
   const [deleteTarget, setDeleteTarget] = useState<{
-    type: 'course' | 'event' | 'resource';
+    type: 'course' | 'event' | 'resource' | 'expertTalk';
     id: string;
     title: string;
   } | null>(null);
 
-  // Form States
+  // ---------------------------
+  // Form States: COURSE
+  // ---------------------------
   const [newCourseTitle, setNewCourseTitle] = useState('');
   const [newCourseDesc, setNewCourseDesc] = useState('');
   const [newCourseInst, setNewCourseInst] = useState('');
   const [newCourseStart, setNewCourseStart] = useState('');
   const [newCourseEnd, setNewCourseEnd] = useState('');
-  const [newEventPaymentLink, setNewEventPaymentLink] = useState('');
-  const [newEventLink, setNewEventLink] = useState('');
-
-
-  // NEW: Links
   const [newCoursePaymentLink, setNewCoursePaymentLink] = useState('');
   const [newCourseCourseLink, setNewCourseCourseLink] = useState('');
 
+  // ---------------------------
+  // Form States: EVENT
+  // ---------------------------
   const [newEventName, setNewEventName] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
   const [newEventLocation, setNewEventLocation] = useState('');
   const [newEventDesc, setNewEventDesc] = useState('');
+  const [newEventPaymentLink, setNewEventPaymentLink] = useState('');
+  const [newEventLink, setNewEventLink] = useState('');
 
+  // ---------------------------
+  // Form States: RESOURCE
+  // ---------------------------
   const [newResourceTitle, setNewResourceTitle] = useState('');
   const [newResourceCategory, setNewResourceCategory] = useState<'article' | 'video' | 'tool' | 'guide' | 'other'>(
     'article'
   );
   const [newResourceLink, setNewResourceLink] = useState('');
   const [newResourceDesc, setNewResourceDesc] = useState('');
+
+  // ---------------------------
+  // Form States: EXPERT TALKS
+  // ---------------------------
+  const [newTalkTitle, setNewTalkTitle] = useState('');
+  const [newTalkYoutubeLink, setNewTalkYoutubeLink] = useState('');
 
   // --- RESET FORMS ---
   const resetForms = () => {
@@ -87,15 +109,19 @@ export const Admin = () => {
     setNewEventPaymentLink('');
     setNewEventLink('');
 
-
     // Resource
     setNewResourceTitle('');
     setNewResourceLink('');
     setNewResourceDesc('');
 
+    // Expert Talks
+    setNewTalkTitle('');
+    setNewTalkYoutubeLink('');
   };
 
-  // --- CREATE HANDLERS ---
+  // ---------------------------
+  // CREATE: COURSE
+  // ---------------------------
   const handleAddCourse = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -109,20 +135,18 @@ export const Admin = () => {
         courseInstructor: newCourseInst,
         courseStartDate: new Date(newCourseStart),
         courseEndDate: new Date(newCourseEnd),
-
-        // ✅ TRIM to avoid whitespace-only strings
         paymentLink: newCoursePaymentLink.trim() ? newCoursePaymentLink.trim() : undefined,
         courseLink: newCourseCourseLink.trim() ? newCourseCourseLink.trim() : undefined,
       };
 
-
       try {
         const response = await api.courses.create(courseData);
-        setCourses([...courses, response.data]);
+        setCourses((prev) => [...prev, response.data]);
         setModalType(null);
         resetForms();
-      } catch (e) {
-        console.error('Failed to create course:', e);
+      } catch (err) {
+        console.error('Failed to create course:', err);
+        alert('Failed to create course. Check console for details.');
       } finally {
         setIsSubmitting(false);
       }
@@ -134,17 +158,15 @@ export const Admin = () => {
       newCourseInst,
       newCourseStart,
       newCourseEnd,
-
-      // ✅ INCLUDE BOTH
       newCoursePaymentLink,
       newCourseCourseLink,
-
-      courses,
       setCourses,
     ]
   );
 
-
+  // ---------------------------
+  // CREATE: EVENT
+  // ---------------------------
   const handleAddEvent = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -162,7 +184,6 @@ export const Admin = () => {
         eventLink: newEventLink.trim() ? newEventLink.trim() : undefined,
       };
 
-
       try {
         const response = await api.events.create(eventData);
         setEvents((prev) => [...prev, response.data]);
@@ -175,19 +196,12 @@ export const Admin = () => {
         setIsSubmitting(false);
       }
     },
-    [
-      isSubmitting,
-      newEventName,
-      newEventDate,
-      newEventLocation,
-      newEventDesc,
-      newEventPaymentLink,
-      newEventLink,
-      setEvents,
-    ]
-
+    [isSubmitting, newEventName, newEventDate, newEventLocation, newEventDesc, newEventPaymentLink, newEventLink, setEvents]
   );
 
+  // ---------------------------
+  // CREATE: RESOURCE
+  // ---------------------------
   const handleAddResource = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -217,7 +231,39 @@ export const Admin = () => {
     [isSubmitting, newResourceTitle, newResourceCategory, newResourceLink, newResourceDesc, setResources]
   );
 
-  // --- DELETE HANDLER ---
+  // ---------------------------
+  // CREATE: EXPERT TALK
+  // ---------------------------
+  const handleAddExpertTalk = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (isSubmitting || !newTalkTitle.trim() || !newTalkYoutubeLink.trim()) return;
+
+      setIsSubmitting(true);
+
+      const payload: Partial<IExpertTalk> = {
+        title: newTalkTitle.trim(),
+        youtubeLink: newTalkYoutubeLink.trim(),
+      };
+
+      try {
+        const response = await api.expertTalks.create(payload);
+        setExpertTalks((prev) => [...prev, response.data]);
+        setModalType(null);
+        resetForms();
+      } catch (err) {
+        console.error('Failed to create expert talk:', err);
+        alert('Failed to create expert talk. Check console for details.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [isSubmitting, newTalkTitle, newTalkYoutubeLink, setExpertTalks]
+  );
+
+  // ---------------------------
+  // DELETE CONFIRM
+  // ---------------------------
   const handleConfirmDelete = async () => {
     if (!deleteTarget || isSubmitting) return;
 
@@ -232,7 +278,11 @@ export const Admin = () => {
       } else if (deleteTarget.type === 'resource') {
         await api.resources.delete(deleteTarget.id);
         setResources((prev) => prev.filter((r) => r._id !== deleteTarget.id));
+      } else if (deleteTarget.type === 'expertTalk') {
+        await api.expertTalks.delete(deleteTarget.id);
+        setExpertTalks((prev) => prev.filter((t) => t._id !== deleteTarget.id));
       }
+
       setDeleteTarget(null);
     } catch (err) {
       console.error(`Failed to delete ${deleteTarget.type}:`, err);
@@ -271,6 +321,7 @@ export const Admin = () => {
     { label: 'Total Courses', value: courses.length, icon: <BookOpen /> },
     { label: 'Total Events', value: events.length, icon: <Calendar /> },
     { label: 'Total Resources', value: resources.length, icon: <Users /> },
+    { label: 'Expert Talks', value: expertTalks?.length || 0, icon: <Video /> },
   ];
 
   // --- RENDER MODALS ---
@@ -284,7 +335,15 @@ export const Admin = () => {
               <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
             <h3 className="text-lg font-medium text-gray-900">
-              Delete {deleteTarget.type === 'course' ? 'Course' : deleteTarget.type === 'event' ? 'Event' : 'Resource'}?
+              Delete{' '}
+              {deleteTarget.type === 'course'
+                ? 'Course'
+                : deleteTarget.type === 'event'
+                ? 'Event'
+                : deleteTarget.type === 'resource'
+                ? 'Resource'
+                : 'Expert Talk'}
+              ?
             </h3>
             <p className="text-sm text-gray-500 mt-2">
               Are you sure you want to delete <span className="font-bold">"{deleteTarget.title}"</span>? This action
@@ -356,7 +415,6 @@ export const Admin = () => {
                 className="w-full px-3 py-2 border rounded-lg"
               />
 
-              {/* Payment Link */}
               <input
                 type="url"
                 placeholder="Payment Link (optional)"
@@ -365,7 +423,6 @@ export const Admin = () => {
                 className="w-full px-3 py-2 border rounded-lg"
               />
 
-              {/* Course Link */}
               <input
                 type="url"
                 placeholder="Course Link (optional)"
@@ -420,6 +477,7 @@ export const Admin = () => {
                 onChange={(e) => setNewEventLocation(e.target.value)}
                 className="w-full px-3 py-2 border rounded-lg"
               />
+
               <input
                 type="url"
                 placeholder="Payment Link (optional)"
@@ -469,6 +527,9 @@ export const Admin = () => {
               >
                 <option value="article">Article</option>
                 <option value="guide">Book</option>
+                <option value="video">Video</option>
+                <option value="tool">Tool</option>
+                <option value="other">Other</option>
               </select>
               <input
                 type="url"
@@ -496,6 +557,37 @@ export const Admin = () => {
           </Modal>
         );
 
+      case 'expertTalk':
+        return (
+          <Modal title="Add Expert Talk" onClose={() => setModalType(null)}>
+            <form onSubmit={handleAddExpertTalk} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Talk Title"
+                required
+                value={newTalkTitle}
+                onChange={(e) => setNewTalkTitle(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+              <input
+                type="url"
+                placeholder="YouTube Link"
+                required
+                value={newTalkYoutubeLink}
+                onChange={(e) => setNewTalkYoutubeLink(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-[#469CA4] hover:bg-[#3a7f8a] text-white font-medium py-2 rounded-lg transition disabled:bg-gray-400"
+              >
+                {isSubmitting ? 'Creating...' : 'Create Expert Talk'}
+              </button>
+            </form>
+          </Modal>
+        );
+
       default:
         return null;
     }
@@ -505,9 +597,9 @@ export const Admin = () => {
     <div className="min-h-screen bg-[#D7E9ED]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-3xl font-bold text-[#30506C] mb-2">Admin Dashboard</h1>
-        <p className="text-[#263A47] mb-8">Manage courses, events, and resources</p>
+        <p className="text-[#263A47] mb-8">Manage courses, events, resources, and expert talks</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {stats.map((stat, index) => (
             <div key={index} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-[#469CA4]">
               <div className="flex items-center justify-between">
@@ -521,6 +613,7 @@ export const Admin = () => {
           ))}
         </div>
 
+        {/* Top grid: Courses + Events */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* --- COURSES SECTION --- */}
           <div className="bg-white rounded-lg shadow-md p-6">
@@ -599,42 +692,86 @@ export const Admin = () => {
           </div>
         </div>
 
-        {/* --- RESOURCES SECTION --- */}
-        <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold text-[#30506C] mb-4 flex items-center space-x-2">
-            <Users size={24} />
-            <span>Resources</span>
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
-            {resources.length === 0 ? (
-              <p className="text-[#263A47]">No resources yet</p>
-            ) : (
-              resources.map((resource) => (
-                <div key={resource._id} className="p-3 bg-[#F5F0ED] rounded-lg flex justify-between items-center group">
-                  <div className="overflow-hidden">
-                    <p className="font-semibold text-[#30506C] truncate">{resource.resourceTitle}</p>
-                    <p className="text-xs text-[#263A47]">{resource.resourceCategory}</p>
+        {/* Bottom grid: Resources + Expert Talks */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          {/* --- RESOURCES SECTION --- */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold text-[#30506C] mb-4 flex items-center space-x-2">
+              <Users size={24} />
+              <span>Resources</span>
+            </h2>
+            <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto">
+              {resources.length === 0 ? (
+                <p className="text-[#263A47]">No resources yet</p>
+              ) : (
+                resources.map((resource) => (
+                  <div key={resource._id} className="p-3 bg-[#F5F0ED] rounded-lg flex justify-between items-center group">
+                    <div className="overflow-hidden">
+                      <p className="font-semibold text-[#30506C] truncate">{resource.resourceTitle}</p>
+                      <p className="text-xs text-[#263A47]">{resource.resourceCategory}</p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setDeleteTarget({ type: 'resource', id: resource._id!, title: resource.resourceTitle })
+                      }
+                      className="text-red-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full flex-shrink-0 ml-2"
+                      title="Delete Resource"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setDeleteTarget({ type: 'resource', id: resource._id!, title: resource.resourceTitle })}
-                    className="text-red-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full flex-shrink-0 ml-2"
-                    title="Delete Resource"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
+            <button
+              onClick={() => {
+                resetForms();
+                setModalType('resource');
+              }}
+              className="w-full mt-4 bg-[#469CA4] hover:bg-[#3a7f8a] text-white font-medium py-2 rounded-lg transition"
+            >
+              <Plus size={16} className="inline mr-1" /> Add Resource
+            </button>
           </div>
-          <button
-            onClick={() => {
-              resetForms();
-              setModalType('resource');
-            }}
-            className="w-full mt-4 bg-[#469CA4] hover:bg-[#3a7f8a] text-white font-medium py-2 rounded-lg transition"
-          >
-            <Plus size={16} className="inline mr-1" /> Add Resource
-          </button>
+
+          {/* --- EXPERT TALKS SECTION --- */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold text-[#30506C] mb-4 flex items-center space-x-2">
+              <Video size={24} />
+              <span>Expert Talks</span>
+            </h2>
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+              {!expertTalks || expertTalks.length === 0 ? (
+                <p className="text-[#263A47]">No expert talks yet</p>
+              ) : (
+                expertTalks.map((talk) => (
+                  <div key={talk._id} className="p-3 bg-[#F5F0ED] rounded-lg flex justify-between items-center group">
+                    <div className="overflow-hidden">
+                      <p className="font-semibold text-[#30506C] truncate">{talk.title}</p>
+                      <p className="text-xs text-[#263A47] truncate">{talk.youtubeLink}</p>
+                    </div>
+                    <button
+                      onClick={() => setDeleteTarget({ type: 'expertTalk', id: talk._id!, title: talk.title })}
+                      className="text-red-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-full flex-shrink-0 ml-2"
+                      title="Delete Expert Talk"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <button
+              onClick={() => {
+                resetForms();
+                setModalType('expertTalk');
+              }}
+              className="w-full mt-4 bg-[#469CA4] hover:bg-[#3a7f8a] text-white font-medium py-2 rounded-lg transition"
+            >
+              <Plus size={16} className="inline mr-1" /> Add Expert Talk
+            </button>
+          </div>
         </div>
       </div>
 

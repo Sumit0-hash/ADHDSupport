@@ -1,7 +1,7 @@
 // client/src/services/api.ts
 
 import axios, { AxiosInstance } from 'axios';
-import { IUser, IHabit, ICourse, IResource, IEvent, IEmotionalCheckin, IPlannerEntry, IBrainDumpEntry, IFocusSession } from '../types/index.js';
+import { IUser, IHabit, ICourse, IResource, IEvent, IEmotionalCheckin, IPlannerEntry, IBrainDumpEntry, IFocusSession, IExpertTalk } from '../types/index.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -114,5 +114,11 @@ export const api = {
       apiClient.put<IEvent>(`/events/${eventId}`, data),
     delete: (eventId: string) => apiClient.delete(`/events/${eventId}`),
   },
+    expertTalks: {
+    getAll: () => apiClient.get<IExpertTalk[]>('/expert-talks'),
+    create: (data: Partial<IExpertTalk>) => apiClient.post<IExpertTalk>('/expert-talks', data),
+    delete: (id: string) => apiClient.delete(`/expert-talks/${id}`),
+  },
+
 
 };

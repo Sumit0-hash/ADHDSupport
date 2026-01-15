@@ -94,7 +94,7 @@ export function Home() {
             </Link>
 
             <Link
-              to="/"
+              to="/expert-talks"
               className="group bg-white rounded-lg shadow-md p-6 flex flex-col items-center justify-center text-center h-48 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-transparent hover:border-[#469CA4]"
             >
               <div className="mb-4 text-[#469CA4] group-hover:scale-110 transition-transform">

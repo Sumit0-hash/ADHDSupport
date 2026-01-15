@@ -118,3 +118,11 @@ export interface IAdmin {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface IExpertTalk {
+  _id?: string;
+  title: string;
+  youtubeLink: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

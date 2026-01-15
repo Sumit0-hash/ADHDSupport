@@ -11,6 +11,7 @@ import habitRoutes from './routes/habits.js';
 import courseRoutes from './routes/courses.js';
 import resourceRoutes from './routes/resources.js';
 import eventRoutes from './routes/events.js';
+import expertTalksRouter from './routes/expertTalks.js';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -33,6 +34,7 @@ app.use('/api/habits', habitRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/events', eventRoutes);
+app.use('/api/expert-talks', expertTalksRouter);
 
 // --- Server Startup ---
 const PORT = process.env.PORT || 5000;

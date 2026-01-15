@@ -24,6 +24,7 @@ import { Events } from './pages/Events';
 import { Profile } from './pages/Profile';
 import { Admin } from './pages/Admin';
 import ParentingBook from "./pages/ParentingBook";
+import { ExpertTalks } from './pages/ExpertTalks.js';
 
 
 const AutoSignInModal = () => {
@@ -79,6 +80,8 @@ const App: React.FC = () => {
               <Route path="/resources" element={<Resources />} />
               <Route path="/events" element={<Events />} />
               <Route path="/parenting-book" element={<ParentingBook />} />
+              <Route path="/expert-talks" element={<ExpertTalks />} />
+
 
               {/* Protected */}
               <Route element={<ProtectedRoute />}>
